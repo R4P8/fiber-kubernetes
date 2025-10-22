@@ -11,8 +11,9 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-
 	"gorm.io/gorm/logger"
+
+	gormtracing "gorm.io/plugin/opentelemetry/tracing"
 )
 
 var (
@@ -32,8 +33,10 @@ func DatabaseConnection(ctx context.Context) (*gorm.DB, error) {
 		sslmode = "disable"
 	}
 
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s search_path=public TimeZone=Asia/Jakarta",
-		host, port, user, password, dbname, sslmode)
+	dsn := fmt.Sprintf(
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s search_path=public TimeZone=Asia/Jakarta",
+		host, port, user, password, dbname, sslmode,
+	)
 
 	db, err := sql.Open("pgx", dsn)
 	if err != nil {
@@ -45,16 +48,19 @@ func DatabaseConnection(ctx context.Context) (*gorm.DB, error) {
 	}
 
 	DB = db
-	log.Println(" Connected to PostgreSQL database successfully")
+	log.Println(" Connected to PostgreSQL successfully")
 
 	gormDB, err := gorm.Open(postgres.New(postgres.Config{
 		Conn: db,
 	}), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
 	})
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize GORM: %w", err)
+	}
+
+	if err := gormDB.Use(gormtracing.NewPlugin()); err != nil {
+		return nil, fmt.Errorf("failed to init GORM tracing plugin: %w", err)
 	}
 
 	sqlDB, err := gormDB.DB()
@@ -67,7 +73,7 @@ func DatabaseConnection(ctx context.Context) (*gorm.DB, error) {
 	sqlDB.SetConnMaxLifetime(time.Hour)
 
 	GormDB = gormDB
-	log.Println(" GORM successfully connected and initialized (PostgreSQL)")
+	log.Println(" GORM successfully initialized with OpenTelemetry tracing")
 
 	return gormDB, nil
 }
