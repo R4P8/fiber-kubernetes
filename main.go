@@ -5,6 +5,7 @@ import (
 	"example/config"
 	"example/entities"
 	"example/routes"
+	"example/tracing"
 	"log"
 
 	"github.com/gofiber/fiber/v2"
@@ -18,6 +19,14 @@ func main() {
 	}
 
 	app := fiber.New()
+
+	ctx := context.Background()
+
+	shutdown := tracing.InitTracer(ctx, "go-fiber-categories", "otel-collector:4317")
+	meterShutdown := tracing.InitMeter(ctx, "go-fiber-categories", "otel-collector:4317")
+
+	defer shutdown(ctx)
+	defer meterShutdown(ctx)
 
 	if _, err := config.DatabaseConnection(context.Background()); err != nil {
 		log.Fatalf(" Gagal konek ke database: %v", err)
