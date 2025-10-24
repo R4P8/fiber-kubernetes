@@ -75,8 +75,8 @@ pipeline {
                                                   passwordVariable: 'DOCKER_PASS')]) {
                     sh '''
                         echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                        docker tag ${DOCKER_IMAGE} docker.io/$DOCKER_USER/${IMAGE_NAME}:${IMAGE_TAG}
-                        docker push docker.io/$DOCKER_USER/${IMAGE_NAME}:${IMAGE_TAG}
+                        docker tag ${DOCKER_IMAGE} docker.io/${DOCKER_USER}/${APP_NAME}:${APP_VERSION}
+                        docker push docker.io/${DOCKER_USER}/${APP_NAME}:${APP_VERSION}
                         docker logout
                     '''
                 }
