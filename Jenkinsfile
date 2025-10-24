@@ -64,6 +64,9 @@ pipeline {
                     apk add --no-cache curl
                     curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
 
+                     echo "🔍 Adding Trivy to PATH..."
+                     export PATH=$PATH:$(pwd)/bin
+
                     echo "🔍 Running Trivy vulnerability scan..."
                     trivy image --exit-code 0 --severity HIGH,CRITICAL ${DOCKER_IMAGE}
                 '''
