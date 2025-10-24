@@ -60,11 +60,11 @@ pipeline {
         stage('Security Scan (Trivy)') {
             steps {
                 sh '''
-                    echo "🔍 Installing Trivy..."
-                    apt-get update -qq && apt-get install -y -qq trivy
-                    
                     echo "🔍 Running Trivy vulnerability scan..."
-                    trivy image --exit-code 0 --severity HIGH,CRITICAL ${DOCKER_IMAGE}
+                    docker run --rm \
+                        -v /var/run/docker.sock:/var/run/docker.sock \
+                        aquasec/trivy:latest image \
+                        --exit-code 0 --severity HIGH,CRITICAL ${DOCKER_IMAGE}
                 '''
             }
         }
