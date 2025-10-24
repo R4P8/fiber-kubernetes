@@ -89,6 +89,10 @@ pipeline {
                                                   usernameVariable: 'ARGO_USER',
                                                   passwordVariable: 'ARGO_PASS')]) {
                     sh '''
+                        echo "🚀 Installing ArgoCD CLI..."
+                        curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+                        chmod +x /usr/local/bin/argocd
+                        
                         echo "🚀 Triggering ArgoCD Sync for ${ARGOCD_APP}..."
                         argocd login ${ARGOCD_SERVER} --username "$ARGO_USER" --password "$ARGO_PASS" --insecure
                         argocd app sync ${ARGOCD_APP}
