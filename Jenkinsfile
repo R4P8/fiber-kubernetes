@@ -12,11 +12,6 @@ pipeline {
         DOCKER_USERNAME = 'rizqirafa8'
         DOCKER_IMAGE = "${DOCKER_USERNAME}/${APP_NAME}:${APP_VERSION}"
 
-        // Harbor config
-        HARBOR_URL = 'http://localhost:8083/'
-        HARBOR_PROJECT = 'go-fiber'
-        HARBOR_IMAGE = "${HARBOR_URL}/${HARBOR_PROJECT}/${APP_NAME}:${APP_VERSION}"
-
         // ArgoCD config
         ARGOCD_SERVER = 'argocd-server.argocd.svc.cluster.local:443'
         ARGOCD_APP = 'go-fiber-app'
@@ -73,16 +68,16 @@ pipeline {
             }
         }
 
-        stage('Push to Harbor Registry') {
+        stage('Push to Docker Hub') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'harbor_cred',
-                                                  usernameVariable: 'HARBOR_USER',
-                                                  passwordVariable: 'HARBOR_PASS')]) {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub_cred',
+                                                  usernameVariable: 'DOCKER_USER',
+                                                  passwordVariable: 'DOCKER_PASS')]) {
                     sh '''
-                        echo "$HARBOR_PASS" | docker login ${HARBOR_URL} -u "$HARBOR_USER" --password-stdin
-                        docker tag ${DOCKER_IMAGE} ${HARBOR_IMAGE}
-                        docker push ${HARBOR_IMAGE}
-                        docker logout ${HARBOR_URL}
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                        docker tag ${DOCKER_IMAGE} docker.io/$DOCKER_USER/${IMAGE_NAME}:${IMAGE_TAG}
+                        docker push docker.io/$DOCKER_USER/${IMAGE_NAME}:${IMAGE_TAG}
+                        docker logout
                     '''
                 }
             }
