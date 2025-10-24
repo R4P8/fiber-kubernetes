@@ -60,6 +60,9 @@ pipeline {
         stage('Security Scan (Trivy)') {
             steps {
                 sh '''
+                    echo "🔍 Installing Trivy..."
+                    apt-get update -qq && apt-get install -y -qq trivy
+                    
                     echo "🔍 Running Trivy vulnerability scan..."
                     trivy image --exit-code 0 --severity HIGH,CRITICAL ${DOCKER_IMAGE}
                 '''
