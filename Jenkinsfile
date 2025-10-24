@@ -1,7 +1,7 @@
 pipeline {
     agent {
         docker {
-            image 'rizqirafa8/go-with-docker'
+            image 'rizqirafa8/go-with-docker-v2'
             args '-v /var/run/docker.sock:/var/run/docker.sock'
         }
     }
