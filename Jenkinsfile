@@ -8,7 +8,7 @@ pipeline {
 
     environment {
         APP_NAME = 'go-fiber-example-v2'
-        APP_VERSION = '1.23.0'
+        APP_VERSION = '1.25.0'
         DOCKER_USERNAME = 'rizqirafa8'
         DOCKER_IMAGE = "${DOCKER_USERNAME}/${APP_NAME}:${APP_VERSION}"
 
