@@ -29,6 +29,18 @@ pipeline {
             }
         }
 
+    stage('Prepare .env File') {
+            steps {
+                withCredentials([file(credentialsId: 'env-file', variable: 'ENV_FILE')]) {
+                    sh '''
+                        echo "🔐 Copying .env from Jenkins Credentials..."
+                        cp $ENV_FILE .env
+                        echo "✅ .env file ready in workspace"
+                    '''
+                }
+            }
+        }
+
         stage('Go Build & Unit Test') {
             steps {
                 sh '''
