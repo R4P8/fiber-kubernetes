@@ -13,7 +13,7 @@ pipeline {
         DOCKER_IMAGE = "${DOCKER_USERNAME}/${APP_NAME}:${APP_VERSION}"
 
         // ArgoCD config
-        ARGOCD_SERVER = 'argocd-server.argocd.svc.cluster.local:443'
+        ARGOCD_SERVER = 'localhost:8080'
         ARGOCD_APP = 'go-fiber-app'
     }
 
@@ -92,7 +92,7 @@ pipeline {
                         echo "🚀 Installing ArgoCD CLI..."
                         curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
                         chmod +x /usr/local/bin/argocd
-                        
+
                         echo "🚀 Triggering ArgoCD Sync for ${ARGOCD_APP}..."
                         argocd login ${ARGOCD_SERVER} --username "$ARGO_USER" --password "$ARGO_PASS" --insecure
                         argocd app sync ${ARGOCD_APP}
