@@ -13,7 +13,7 @@ pipeline {
         DOCKER_IMAGE = "${DOCKER_USERNAME}/${APP_NAME}:${APP_VERSION}"
 
         // ArgoCD config
-        ARGOCD_SERVER = 'localhost:8080'
+        ARGOCD_SERVER = 'argocd-server.argocd.svc.cluster.local:443'
         ARGOCD_APP = 'go-fiber-app'
     }
 
