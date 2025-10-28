@@ -1,0 +1,18 @@
+filebeat.inputs:
+  - type: log
+    paths:
+      - /var/log/app.log
+    fields:
+      service: go-fiber
+    fields_under_root: true
+
+output.elasticsearch:
+  hosts: ["http://elasticsearch:9200"]
+  index: "filebeat-logs-%{+yyyy.MM.dd}"
+
+setup.template.name: "app-logs"
+setup.template.pattern: "app-logs-*"
+setup.ilm.enabled: false
+
+setup.kibana:
+  host: "kibana:5601"
