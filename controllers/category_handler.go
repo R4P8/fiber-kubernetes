@@ -5,6 +5,7 @@ import (
 	"example/config"
 	"example/entities"
 	"example/tracing"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -41,10 +42,16 @@ func GetCategories(c *fiber.Ctx) error {
 	var categories []entities.Category
 
 	if err := config.GormDB.Find(&categories).Error; err != nil {
+		msg := fmt.Sprintf("Failed to retrieve categories, error=%v", err)
+		config.LogToFileAndES("ERROR", msg)
+
 		span.RecordError(err)
 		recordMetrics(ctx, c.Path(), start, http.StatusInternalServerError)
 		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
 	}
+
+	msg := fmt.Sprintf("Successfully retrieved %d categories", len(categories))
+	config.LogToFileAndES("INFO", msg)
 
 	recordMetrics(ctx, c.Path(), start, http.StatusOK)
 	return c.JSON(categories)
@@ -61,10 +68,16 @@ func GetCategory(c *fiber.Ctx) error {
 	var category entities.Category
 
 	if err := config.GormDB.First(&category, id).Error; err != nil {
+		msg := fmt.Sprintf("Category not found with ID=%s, error=%v", id, err)
+		config.LogToFileAndES("ERROR", msg)
+
 		span.RecordError(err)
 		recordMetrics(ctx, c.Path(), start, http.StatusNotFound)
 		return c.Status(404).JSON(fiber.Map{"error": "Category not found"})
 	}
+
+	msg := fmt.Sprintf("Successfully retrieved category ID=%s", id)
+	config.LogToFileAndES("INFO", msg)
 
 	recordMetrics(ctx, c.Path(), start, http.StatusOK)
 	return c.JSON(category)
@@ -78,16 +91,24 @@ func CreateCategory(c *fiber.Ctx) error {
 	var category entities.Category
 
 	if err := c.BodyParser(&category); err != nil {
+		msg := fmt.Sprintf("Invalid category payload: %v", err)
+		config.LogToFileAndES("ERROR", msg)
+
 		span.RecordError(err)
 		recordMetrics(ctx, c.Path(), start, http.StatusBadRequest)
 		return c.Status(400).JSON(fiber.Map{"error": err.Error()})
 	}
 
 	if err := config.GormDB.Create(&category).Error; err != nil {
+		msg := fmt.Sprintf("Failed to create category: %v", err)
+		config.LogToFileAndES("ERROR", msg)
+
 		span.RecordError(err)
 		recordMetrics(ctx, c.Path(), start, http.StatusInternalServerError)
 		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
 	}
+	msg := fmt.Sprintf("Created category ID=%d, Name=%s", category.ID, category.Name)
+	config.LogToFileAndES("INFO", msg)
 
 	recordMetrics(ctx, c.Path(), start, http.StatusCreated)
 	return c.Status(201).JSON(category)
@@ -103,6 +124,9 @@ func UpdateCategory(c *fiber.Ctx) error {
 
 	var category entities.Category
 	if err := config.GormDB.First(&category, id).Error; err != nil {
+		msg := fmt.Sprintf("Category not found for update, ID=%s, error=%v", id, err)
+		config.LogToFileAndES("ERROR", msg)
+
 		span.RecordError(err)
 		recordMetrics(ctx, c.Path(), start, http.StatusNotFound)
 		return c.Status(404).JSON(fiber.Map{"error": "Category not found"})
@@ -110,6 +134,9 @@ func UpdateCategory(c *fiber.Ctx) error {
 
 	var input entities.Category
 	if err := c.BodyParser(&input); err != nil {
+		msg := fmt.Sprintf("Invalid update payload: %v", err)
+		config.LogToFileAndES("ERROR", msg)
+
 		span.RecordError(err)
 		recordMetrics(ctx, c.Path(), start, http.StatusBadRequest)
 		return c.Status(400).JSON(fiber.Map{"error": err.Error()})
@@ -117,11 +144,15 @@ func UpdateCategory(c *fiber.Ctx) error {
 
 	category.Name = input.Name
 	if err := config.GormDB.Save(&category).Error; err != nil {
+		msg := fmt.Sprintf("Failed to update category ID=%s, error=%v", id, err)
+		config.LogToFileAndES("ERROR", msg)
+
 		span.RecordError(err)
 		recordMetrics(ctx, c.Path(), start, http.StatusInternalServerError)
 		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
 	}
 
+	config.LogToFileAndES("INFO", fmt.Sprintf("Updated category ID=%s to Name=%s", id, category.Name))
 	recordMetrics(ctx, c.Path(), start, http.StatusOK)
 	return c.JSON(category)
 }
@@ -136,17 +167,24 @@ func DeleteCategory(c *fiber.Ctx) error {
 
 	var category entities.Category
 	if err := config.GormDB.First(&category, id).Error; err != nil {
+		msg := fmt.Sprintf("Category not found for delete, ID=%s, error=%v", id, err)
+		config.LogToFileAndES("ERROR", msg)
+
 		span.RecordError(err)
 		recordMetrics(ctx, c.Path(), start, http.StatusNotFound)
 		return c.Status(404).JSON(fiber.Map{"error": "Category not found"})
 	}
 
 	if err := config.GormDB.Delete(&category).Error; err != nil {
+		msg := fmt.Sprintf("Failed to delete category ID=%s, error=%v", id, err)
+		config.LogToFileAndES("ERROR", msg)
+
 		span.RecordError(err)
 		recordMetrics(ctx, c.Path(), start, http.StatusInternalServerError)
 		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
 	}
 
+	config.LogToFileAndES("INFO", fmt.Sprintf("Deleted category ID=%s", id))
 	recordMetrics(ctx, c.Path(), start, http.StatusNoContent)
 	return c.SendStatus(204)
 }
