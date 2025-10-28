@@ -25,15 +25,45 @@ Didesain untuk berjalan baik secara **lokal menggunakan Docker Compose**, maupun
 **✅ OpenTelemetry** Collector — mengumpulkan metrics dan traces
 **✅ Prometheus** — metrics monitoring
 **✅ Jaeger** — distributed tracing visualizer
-**✅ Grafana(Tambahkan)** — observability dashboard
+**✅ Elasticsearch** — Centralized logging dengan full-text search
+**✅ Filebeat** — Log shipping dari aplikasi ke Elasticsearch
+**✅ Grafana** — observability dashboard
 **✅ Docker & Kubernetes** Ready — bisa dijalankan di kedua environment
 
 ## 🧩 Architecture Overview
 ````
 Go Fiber App ──> OpenTelemetry Collector ──> Jaeger (Traces)
+
+                     │
+                     └────> Elasticsearch ─> Kibana/grafana (Logs)
                      │
                      └────> Prometheus ──> Grafana (Metrics)
+
+Go Fiber App ──> Filebeat ────────────────> Elasticsearch ──> Kibana (Logs)
 ````
+
+```mermaid
+graph LR
+    subgraph Observability Stack
+        A[Go Fiber App] -->|Metrics, Traces<br/>OTLP| B(OpenTelemetry Collector)
+        A -->|Logs<br/>File| F(Filebeat)
+        
+        B -->|Metrics| D(Prometheus)
+        B -->|Traces| C(Jaeger)
+        B -->|Logs| H(Elasticsearch)
+        
+        F -->|Logs| H
+        
+        D --> E(Grafana<br/>Metrics Dashboard)
+        C --> E
+        H --> I(Kibana<br/>Logs Visualizer)
+        H --> E
+    end
+    
+    style E fill:#00bfff,stroke:#333,stroke-width:2px
+    style I fill:#f9f,stroke:#333,stroke-width:2px
+```
+
 
 ## ⚙️ Setup (Local with Docker Compose)
 **1 Salin file** ````.env.example````
@@ -55,6 +85,8 @@ docker ps
 | Prometheus   | [http://localhost:9090](http://localhost:9090)   |
 | Grafana      | [http://localhost:3001](http://localhost:3001)   |
 | Jaeger UI    | [http://localhost:16686](http://localhost:16686) |
+| Elasticsearch| http://localhost:9200   |
+| Kibana UI    | http://localhost:5601   |
 
 ## 🧩 Observability Stack
 **🟢 OpenTelemetry ````(otel-config.yaml)````**
@@ -72,7 +104,7 @@ Mengambil metrics dari:
 **🟣 Jaeger**
 Menampilkan trace aplikasi Go Fiber yang dikirim melalui OTLP port ````4317````.
 
-**🟠 Grafana(Tambahkan Manual)**
+**🟠 Grafana**
 Datasource otomatis:
 ````
 - name: Jaeger
@@ -89,6 +121,11 @@ Gunakan Grafana untuk memantau:
 * Request latency
 * Application traces 
 * Resource metrics (CPU, memory, dsb.)
+
+## 🟤 Elastic Stack (Centralized Logging)
+* **Filebeat**: Mengirim log aplikasi (misalnya dari file log atau stdout/stderr) ke Logstash.
+* **Elasticsearch**: Menyimpan log terpusat untuk pencarian cepat.
+* **Kibana**: Visualisasi dan pencarian log secara full-text search.
 
 ## 🧱 API Structure
 
